@@ -10,6 +10,7 @@ interface AddUserModalProps {
 interface UserFormData {
   UserName: string;
   Password: string;
+  Role: string;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -23,11 +24,11 @@ export default function AddUserModal({
   const [formData, setFormData] = useState<UserFormData>({
     UserName: "",
     Password: "",
+    Role: "user",
   });
 
   const isEdit = Boolean(userId);
-
-  const [token] = useState(localStorage.getItem("token"));
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (userId && isOpen) {
@@ -43,8 +44,9 @@ export default function AddUserModal({
           if (response.ok) {
             const data = await response.json();
             setFormData({
-              UserName: data.username || "",
+              UserName: data.username || data.UserName || "",
               Password: "",
+              Role: data.role || data.Role || "user",
             });
           }
         } catch (error) {
@@ -56,11 +58,14 @@ export default function AddUserModal({
       setFormData({
         UserName: "",
         Password: "",
+        Role: "user",
       });
     }
-  }, [userId, isOpen]);
+  }, [userId, isOpen, token]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -71,11 +76,12 @@ export default function AddUserModal({
     const payload = {
       username: formData.UserName,
       pass: formData.Password,
+      role: formData.Role,
     };
 
     const url = isEdit
       ? `${API_BASE_URL}/api/register/${userId}`
-      : "${API_BASE_URL}/api/register";
+      : `${API_BASE_URL}/api/register`;
     const method = isEdit ? "PUT" : "POST";
 
     try {
@@ -143,6 +149,25 @@ export default function AddUserModal({
                 required={!isEdit}
               />
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2 w-full">
+            <label
+              htmlFor="Role"
+              className="block mb-1 text-sm font-bold text-gray-900"
+            >
+              Role
+            </label>
+            <select
+              id="Role"
+              name="Role"
+              value={formData.Role}
+              onChange={handleChange}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
 
           <div className="flex justify-between items-center pt-4">

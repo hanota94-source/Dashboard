@@ -8,9 +8,9 @@ interface NavItem {
 }
 
 interface User {
-  id: String;
-  username: String;
-  role: String;
+  id: string;
+  username: string;
+  role: string;
 }
 
 const navs: NavItem[] = [
@@ -43,15 +43,23 @@ export default function Sidebar() {
     navigate("/login");
   };
 
-  function color(nav: String) {
+  function color(nav: string) {
     return location.pathname === nav;
   }
+
+  const filteredNavs = navs.filter((nav) => {
+    if (nav.name === "Users" && user?.role === "user") {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className="fixed top-0 left-0 h-screen w-[250px] bg-white shadow-lg z-50 flex flex-col justify-between p-6">
       <div className="flex flex-col items-center h-full gap-12 pt-7">
         <h1 className="text-3xl font-bold">Shop</h1>
         <nav className="flex flex-col gap-14">
-          {navs.map((nav) => (
+          {filteredNavs.map((nav) => (
             <Link
               key={nav.nav}
               to={nav.nav}

@@ -32,7 +32,9 @@ export const authenticateToken = (req, res, next) => {
 
 router.post("/api/register", authenticateToken, async (req, res) => {
   try {
-    const { username, pass } = req.body;
+    if (req.user.role !== "admin") return;
+
+    const { username, pass, role } = req.body;
 
     if (!username || !pass) {
       return res
@@ -47,7 +49,7 @@ router.post("/api/register", authenticateToken, async (req, res) => {
 
     const psshashed = await bcrypt.hash(pass, 10);
 
-    const newUser = new Users({ username, pass: psshashed, role: "admin" });
+    const newUser = new Users({ username, pass: psshashed, role });
 
     const savedUser = await newUser.save();
 
@@ -63,8 +65,10 @@ router.post("/api/register", authenticateToken, async (req, res) => {
 
 router.put("/api/register/:id", authenticateToken, async (req, res) => {
   try {
+    if (req.user.role !== "admin") return;
+
     const { id } = req.params;
-    const { username, pass } = req.body;
+    const { username, pass, role } = req.body;
 
     const existingUser = await Users.findById(id);
     if (!existingUser) {
@@ -77,6 +81,8 @@ router.put("/api/register/:id", authenticateToken, async (req, res) => {
     if (pass) {
       updateData.pass = await bcrypt.hash(pass, 10);
     }
+
+    if (role) updateData.role = role;
 
     const updatedUser = await Users.findByIdAndUpdate(id, updateData, {
       new: true,
@@ -101,6 +107,8 @@ router.put("/api/register/:id", authenticateToken, async (req, res) => {
 
 router.delete("/api/users/:id", authenticateToken, async (req, res) => {
   try {
+    if (req.user.role !== "admin") return;
+
     const { id } = req.params;
 
     const product = await Users.findById(id);
@@ -123,6 +131,8 @@ router.delete("/api/users/:id", authenticateToken, async (req, res) => {
 
 router.get("/api/users/:id", authenticateToken, async (req, res) => {
   try {
+    if (req.user.role !== "admin") return;
+
     const { id } = req.params;
 
     const user = await Users.findById(id);
@@ -145,6 +155,7 @@ router.get("/api/users/:id", authenticateToken, async (req, res) => {
 
 router.get("/api/users", authenticateToken, async (req, res) => {
   try {
+    if (req.user.role !== "admin") return;
     const user = await Users.find();
 
     if (!user) {
@@ -216,6 +227,7 @@ router.post("/api/login", async (req, res) => {
 router.get("/api/auth/check", authenticateToken, (req, res) => {
   return res.status(200).json({
     valid: true,
+    user: req.user,
   });
 });
 
